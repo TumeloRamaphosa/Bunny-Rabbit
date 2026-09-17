@@ -9,12 +9,13 @@
     "workers/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=@bunny-rabbit/web && npm run build --workspace=@bunny-rabbit/edge",
+    "build": "npm run build --workspace=@bunny-rabbit/web",
+    "build:edge": "npm run build --workspace=@bunny-rabbit/edge",
     "dev": "npm run dev --workspace=@bunny-rabbit/web",
     "lint": "npm run lint --workspace=@bunny-rabbit/web",
     "typecheck": "npm run typecheck --workspace=@bunny-rabbit/web"
   },
   "engines": {
-    "node": ">=20"
+    "node": "24.x"
   }
 }

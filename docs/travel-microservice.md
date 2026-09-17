@@ -1,6 +1,7 @@
 # Bunny Rabbit Travel Microservice
 
-Service name: **`bunny-rabbit-travel`**
+Service name: **`bunny-rabbit-travel`**  
+Fleet conventions: **Claudiou / Studex infra** (Vercel-primary; Cloudflare DNS/CDN later).
 
 Mobile-first Phuket trip planner (Dec 15–22, 2026) for Tumelo, Katlego, and guests.
 
@@ -8,85 +9,92 @@ Mobile-first Phuket trip planner (Dec 15–22, 2026) for Tumelo, Katlego, and gu
 
 ```
 Bunny-Rabbit/
-├── README.md                    # Ops mission + repo overview
-├── 01-Daily-Agent-Routine.md    # Obsidian ops (unchanged)
-├── 05-Agent-Roster.md
-├── apps/web/                    # Next.js App Router (primary deployable)
-├── workers/edge/                # Cloudflare Worker stub (health + optional proxy)
-├── docs/travel-microservice.md  # This file
-├── .env.example
-└── vercel.json                  # Vercel monorepo build from root
+├── README.md
+├── apps/web/                    # Next.js — sole UI host (Vercel)
+├── workers/edge/                # Optional; only if you add edge API outside Next (not used for UI)
+├── docs/travel-microservice.md
+└── .env.example
 ```
 
 ## Local development
 
+Requires **Node 24.x** (see `.nvmrc`).
+
 ```bash
-npm install
+npm install          # from repo root (workspaces)
 npm run dev          # http://localhost:3000
-npm run build        # web + edge stub
+npm run build        # Next.js production build only
 ```
 
-| Port | Service              | Health check              |
-|------|----------------------|---------------------------|
-| 3000 | `@bunny-rabbit/web`  | `GET /api/health`         |
-| 8787 | `@bunny-rabbit/edge` | `GET /health` (wrangler dev) |
+| Port | Service             | Health check        |
+|------|---------------------|---------------------|
+| 3000 | `@bunny-rabbit/web` | `GET /api/health`   |
 
-## Deploy to Vercel
-
-1. Import the GitHub repo in [Vercel](https://vercel.com/new).
-2. **Root Directory:** leave as repository root (uses root `vercel.json`)  
-   *Alternative:* set Root Directory to `apps/web` and use default Next.js build.
-3. Framework preset: **Next.js**.
-4. Environment variables (see `.env.example`):
-   - `NEXT_PUBLIC_APP_URL` → production URL (e.g. `https://bunny-rabbit-travel.vercel.app`)
-5. Deploy. Verify: `curl https://<your-host>/api/health`
-
-### Studex-style fleet registration
-
-| Field        | Value |
-|-------------|-------|
-| Service ID  | `bunny-rabbit-travel` |
-| Type        | `web` (Next.js) |
-| Port (local)| `3000` |
-| Health      | `GET /api/health` → `{ "status": "ok", "service": "bunny-rabbit-travel" }` |
-| Depends on  | None (client-side localStorage; no DB in v0) |
-| Optional    | LiteLLM gateway for future agent hooks |
-
-## Deploy to Cloudflare
-
-### Option A — Worker in front of Vercel (CDN / edge API)
-
-1. `cd workers/edge && npm install`
-2. `npx wrangler login` (use your Cloudflare account)
-3. Set secret: `wrangler secret put VERCEL_ORIGIN_URL` → your Vercel URL
-4. `npm run deploy`
-5. Route DNS (orange cloud) `travel.yourdomain.com` → Worker  
-   **WAF / DNS:** use Cloudflare dashboard for bot fight mode, rate limits, and geo rules on `/api/*`.
-
-Edge health: `GET https://<worker-host>/health`
-
-### Option B — Cloudflare Pages (static + Next export alternative)
-
-For full Next.js on Cloudflare, use [@cloudflare/next-on-pages](https://github.com/cloudflare/next-on-pages) or OpenNext adapter in a follow-up. Current v0 targets **Vercel for the Next app** and **Worker stub** for edge health/proxy.
-
-Pages static fallback (marketing only):
+Optional edge package (not part of default fleet deploy):
 
 ```bash
-cd apps/web && npx next build && npx next export   # if export enabled in future
-npx wrangler pages deploy out --project-name=bunny-rabbit-travel
+npm run build:edge   # only when maintaining workers/edge
 ```
 
-## Cloudflare + Vercel together
+## Vercel (primary host)
 
-```
-User → Cloudflare DNS (WAF/CDN) → Worker (optional /health, /api/edge)
-                              → Vercel (Next.js apps/web)
-```
+**Do not** deploy this Next.js UI to Cloudflare Pages. The app runs on Vercel only.
 
-- **TLS:** Full (strict) between Cloudflare and Vercel custom domain.
-- **Caching:** cache static assets at Cloudflare; bypass cache for `/api/*`.
-- **Privacy:** wellness data never leaves the browser; no server-side PHI.
+| Setting | Value |
+|---------|--------|
+| Team | `stud-ex-s-projects` |
+| Project name | `bunny-rabbit` or `studex-bunny-rabbit` |
+| Framework | Next.js |
+| **Root Directory** | **`apps/web`** |
+| Node.js version | **24.x** |
+| Production branch | `main` |
+| Preview deployments | **Pull requests** (preview-first workflow) |
+
+### Preview-first deploy (recommended order)
+
+1. In Vercel, switch to team **`stud-ex-s-projects`** and import this GitHub repo.
+2. Create project **`bunny-rabbit`** (or **`studex-bunny-rabbit`**).
+3. Set **Root Directory** to **`apps/web`**.
+4. Enable **Include source files outside of the Root Directory** (monorepo workspaces).
+5. Suggested commands (if Vercel does not auto-detect):
+   - **Install Command:** `cd ../.. && npm install`
+   - **Build Command:** `npm run build` (runs in `apps/web`)
+   - **Output:** Next.js default (no custom `outputDirectory`)
+6. Add environment variables from [`.env.example`](../.env.example) (Preview + Development first; Production later).
+7. Open a PR → confirm **Preview** URL and `curl https://<preview-host>/api/health`.
+8. **Production** on `main` and any **custom domain** (e.g. candidate `bunny.studex-group.com`, not yet claimed) only after **Agent Lord** approval.
+
+### Studex fleet registration
+
+| Field | Value |
+|-------|--------|
+| Service ID | `bunny-rabbit-travel` |
+| Host | Vercel (`stud-ex-s-projects`) |
+| Type | `web` (Next.js App Router) |
+| Root path | `apps/web` |
+| Port (local) | `3000` |
+| Health | `GET /api/health` → `{ "status": "ok", "service": "bunny-rabbit-travel" }` |
+| Data | Client `localStorage` only (v0); no server DB |
+| Optional agents | `BUZZ_*` env vars for future Buzz / LiteLLM integration |
+
+## Cloudflare (later — DNS / CDN only)
+
+Use Cloudflare **in front of a custom domain** pointing to Vercel — not as a second Next host.
+
+1. After Agent Lord approves a hostname (candidate: **`bunny.studex-group.com`**), add the domain in Vercel and note the recommended CNAME target.
+2. In Cloudflare DNS, create the record Vercel specifies (typically CNAME → `cname.vercel-dns.com` or A/ALIAS per Vercel docs).
+3. Orange-cloud proxy is OK for CDN/WAF; use **Full (strict)** SSL.
+4. Cache static assets; **bypass cache** for `/api/*`.
+5. **Do not** mirror the Next app on Cloudflare Pages.
+
+### Workers (`workers/edge`)
+
+Skip for the current product: health and UI live on Next (`/api/health`). Add a Worker **only** if you introduce a small **edge API outside Next** (rate limiting, webhooks, etc.). See `workers/edge/README.md` — not wired into Vercel deploy.
 
 ## Environment variables
 
-Copy `.env.example` to `.env.local` in `apps/web` for local overrides. Never commit secrets.
+Copy [`.env.example`](../.env.example) to `apps/web/.env.local` for local dev. Set the same keys in Vercel (Preview first). Never commit real secrets.
+
+## Privacy
+
+Wellness/cycle markers stay in the browser. No Flo API. Not medical advice.

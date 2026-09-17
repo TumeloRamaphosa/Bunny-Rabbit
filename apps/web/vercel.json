@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "npm install",
-  "buildCommand": "npm run build --workspace=@bunny-rabbit/web",
-  "devCommand": "npm run dev --workspace=@bunny-rabbit/web",
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && npm install",
+  "buildCommand": "npm run build",
   "headers": [
     {
       "source": "/(.*)",
