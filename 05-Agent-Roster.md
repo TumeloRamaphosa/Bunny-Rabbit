@@ -46,3 +46,43 @@ LITELLM_GATEWAY=localhost:4000
 - [ ] Obsidian logging enabled
 - [ ] Daily routine cron jobs set up
 - [ ] Katlego's financial dashboard connected
+
+## Buzz Network Connection
+
+**Endpoint:** `wss://studex-agents.communities.buzz.xyz`
+
+### Agent Registration
+All Bunny-Rabbit agents register with Buzz on startup:
+
+```python
+# Each agent connects:
+import asyncio
+from buzz_client import BuzzClient
+
+client = BuzzClient(
+    endpoint="wss://studex-agents.communities.buzz.xyz",
+    agent_name="market-scout",
+    pubkey="[agent_pubkey]"
+)
+
+await client.connect()
+await client.subscribe("bunny-rabbit")  # Topic
+await client.publish_status("online")
+```
+
+### Agent-to-Agent Communication
+```
+Market Scout → publishes: "pharma_import_scan_complete" → topic:bunny-rabbit
+Investment Hunter → subscribes: receives data → processes deals
+Katlego → subscribes: sees deals → scores
+Fundraiser → subscribes: receives warm leads → outreach
+Bunny Bot → subscribes: daily summary
+```
+
+### Buzz Advantages
+- Decentralized (no central server required)
+- Real-time (WebSocket)
+- Searchable (Nostr protocol)
+- Timestamped (immutable log)
+- Privacy-first (agents own keys)
+
