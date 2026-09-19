@@ -13,9 +13,9 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Bunny Rabbit — Phuket 2026",
+  title: "Bunny Rabbit — Family OS & Phuket 2026",
   description:
-    "Private travel planner for Tumelo, Katlego & guests — Dec 15–22 2026, Phuket villa trip.",
+    "Private family operating system and Phuket travel planner for Tumelo & Katlego — lock-in diary, goals, fitness, food, Dec 2026 trip.",
   robots: { index: false, follow: false },
 };
 

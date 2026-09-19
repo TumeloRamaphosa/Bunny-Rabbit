@@ -43,4 +43,17 @@ Bunny-Rabbit/
 
 Full checklist: [docs/travel-microservice.md](./docs/travel-microservice.md). Env template: [`.env.example`](./.env.example) (`NEXT_PUBLIC_*`, optional `BUZZ_*`).
 
+### Family OS modules (`apps/web`)
+
+In the app, switch **Family OS** (top toggle) from the Phuket trip planner:
+
+| Module | Purpose |
+|--------|---------|
+| **Lock-in diary** | Daily 19:00 SAST ritual — agenda (overview → 20m agents → 20m couple/fitness/therapy → diary), date picker, notepad fields; **laptops + notepads only, no phones**. Therapy notes in a separate private localStorage bucket. |
+| **Fitness** | Weekly board: 2 weight sessions + 3× 1-hour walks; mark done; week streak. |
+| **Food log** | Light daily meals/notes (not calorie tracking). |
+| **Couple goals** | Shared goals with dated check-ins. |
+
+All OS data uses **localStorage v1** in the browser (same privacy model as wellness). Spec: [09-Operating-System.md](./09-Operating-System.md).
+
 ## Next: Lock the daily routine + push to git

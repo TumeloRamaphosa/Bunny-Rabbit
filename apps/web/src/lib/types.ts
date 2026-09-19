@@ -55,3 +55,42 @@ export const TRIP: TripMeta = {
 
 export const TRIP_HIGHLIGHT_START = "2026-12-15";
 export const TRIP_HIGHLIGHT_END = "2026-12-22";
+
+/** Family OS — lock-in diary entry (shared fields; therapy is separate). */
+export interface LockInEntry {
+  date: string;
+  overview: string;
+  agentsBlock: string;
+  coupleFitnessBlock: string;
+  diaryTomorrow: string;
+}
+
+export const EMPTY_LOCK_IN: Omit<LockInEntry, "date"> = {
+  overview: "",
+  agentsBlock: "",
+  coupleFitnessBlock: "",
+  diaryTomorrow: "",
+};
+
+/** Weekly fitness targets: 2 weight sessions + 3 one-hour walks. */
+export interface FitnessWeekLog {
+  weekStart: string;
+  weightSessions: [boolean, boolean];
+  walks: [boolean, boolean, boolean];
+}
+
+export interface FoodDayLog {
+  date: string;
+  breakfast: string;
+  lunch: string;
+  dinner: string;
+  snacks: string;
+  notes: string;
+}
+
+export interface CoupleGoal {
+  id: string;
+  title: string;
+  done: boolean;
+  checkIns: { date: string; note: string }[];
+}
