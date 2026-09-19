@@ -1,6 +1,16 @@
 "use client";
 
-import type { ChecklistItem, ItineraryItem, WellnessMarker } from "./types";
+import type {
+  ChecklistItem,
+  CoupleGoal,
+  FitnessWeekLog,
+  FoodDayLog,
+  ItineraryItem,
+  LockInEntry,
+  WellnessMarker,
+} from "./types";
+import { EMPTY_LOCK_IN } from "./types";
+import { mondayOfWeek } from "./format";
 import {
   SEED_CHECKLIST,
   SEED_ITINERARY,
@@ -12,6 +22,11 @@ const KEYS = {
   notes: "bunny-rabbit:shared-notes",
   wellness: "bunny-rabbit:wellness-private",
   villasShortlist: "bunny-rabbit:villa-shortlist",
+  lockIn: "bunny-rabbit:lockin-v1",
+  lockInTherapy: "bunny-rabbit:lockin-therapy-private-v1",
+  fitness: "bunny-rabbit:fitness-v1",
+  food: "bunny-rabbit:food-v1",
+  coupleGoals: "bunny-rabbit:couple-goals-v1",
 } as const;
 
 function readJson<T>(key: string, fallback: T): T {
@@ -71,6 +86,115 @@ export function loadVillaShortlist(): string[] {
 
 export function saveVillaShortlist(ids: string[]): void {
   writeJson(KEYS.villasShortlist, ids);
+}
+
+type LockInStore = Record<string, LockInEntry>;
+
+export function loadLockInEntry(date: string): LockInEntry {
+  const store = readJson<LockInStore>(KEYS.lockIn, {});
+  const existing = store[date];
+  if (existing) return existing;
+  return { date, ...EMPTY_LOCK_IN };
+}
+
+export function saveLockInEntry(entry: LockInEntry): void {
+  const store = readJson<LockInStore>(KEYS.lockIn, {});
+  store[entry.date] = entry;
+  writeJson(KEYS.lockIn, store);
+}
+
+type TherapyNotesStore = Record<string, string>;
+
+export function loadLockInTherapyNote(date: string): string {
+  const store = readJson<TherapyNotesStore>(KEYS.lockInTherapy, {});
+  return store[date] ?? "";
+}
+
+export function saveLockInTherapyNote(date: string, note: string): void {
+  const store = readJson<TherapyNotesStore>(KEYS.lockInTherapy, {});
+  store[date] = note;
+  writeJson(KEYS.lockInTherapy, store);
+}
+
+type FitnessStore = Record<string, FitnessWeekLog>;
+
+export function defaultFitnessWeek(weekStart: string): FitnessWeekLog {
+  return {
+    weekStart,
+    weightSessions: [false, false],
+    walks: [false, false, false],
+  };
+}
+
+export function loadFitnessWeek(weekStart: string): FitnessWeekLog {
+  const store = readJson<FitnessStore>(KEYS.fitness, {});
+  return store[weekStart] ?? defaultFitnessWeek(weekStart);
+}
+
+export function saveFitnessWeek(log: FitnessWeekLog): void {
+  const store = readJson<FitnessStore>(KEYS.fitness, {});
+  store[log.weekStart] = log;
+  writeJson(KEYS.fitness, store);
+}
+
+export function loadAllFitnessWeeks(): FitnessStore {
+  return readJson<FitnessStore>(KEYS.fitness, {});
+}
+
+export function isFitnessWeekComplete(log: FitnessWeekLog): boolean {
+  return (
+    log.weightSessions.every(Boolean) && log.walks.every(Boolean)
+  );
+}
+
+/** Consecutive complete weeks ending at the week containing `anchor`. */
+export function fitnessWeekStreak(
+  store: FitnessStore,
+  anchor: Date = new Date(),
+): number {
+  let streak = 0;
+  let week = mondayOfWeek(anchor);
+  for (let i = 0; i < 104; i++) {
+    const log = store[week] ?? defaultFitnessWeek(week);
+    if (!isFitnessWeekComplete(log)) break;
+    streak++;
+    const [y, m, d] = week.split("-").map(Number);
+    const prev = new Date(y, m - 1, d);
+    prev.setDate(prev.getDate() - 7);
+    week = mondayOfWeek(prev);
+  }
+  return streak;
+}
+
+type FoodStore = Record<string, FoodDayLog>;
+
+const EMPTY_FOOD: Omit<FoodDayLog, "date"> = {
+  breakfast: "",
+  lunch: "",
+  dinner: "",
+  snacks: "",
+  notes: "",
+};
+
+export function loadFoodDay(date: string): FoodDayLog {
+  const store = readJson<FoodStore>(KEYS.food, {});
+  const existing = store[date];
+  if (existing) return existing;
+  return { date, ...EMPTY_FOOD };
+}
+
+export function saveFoodDay(log: FoodDayLog): void {
+  const store = readJson<FoodStore>(KEYS.food, {});
+  store[log.date] = log;
+  writeJson(KEYS.food, store);
+}
+
+export function loadCoupleGoals(): CoupleGoal[] {
+  return readJson<CoupleGoal[]>(KEYS.coupleGoals, []);
+}
+
+export function saveCoupleGoals(goals: CoupleGoal[]): void {
+  writeJson(KEYS.coupleGoals, goals);
 }
 
 /** Stub: parse simple CSV lines `date,label,type` */
