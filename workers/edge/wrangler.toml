@@ -1,0 +1,11 @@
+name = "bunny-rabbit-edge"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+
+# Optional: route API traffic in front of Vercel-hosted Next app
+# [routes]
+# pattern = "travel.example.com/api/edge/*"
+# zone_name = "example.com"
+
+[vars]
+SERVICE_NAME = "bunny-rabbit-travel"
